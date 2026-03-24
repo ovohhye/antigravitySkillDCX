@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UX Double Diamond — Skill Registry</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --d1: #5B4FCF;  --d1-bg: #F0EFFE;  --d1-mid: #C4BEFA;  --d1-dark: #2D2478;
+    --d2: #0F7A5A;  --d2-bg: #E6F7F1;  --d2-mid: #6DCFAA;  --d2-dark: #064733;
+    --d3: #C07010;  --d3-bg: #FDF3E3;  --d3-mid: #F5C060;  --d3-dark: #7A4500;
+    --d4: #1A6FA8;  --d4-bg: #E5F2FB;  --d4-mid: #7EC5EF;  --d4-dark: #0A3F63;
+    --text: #1A1918;
+    --text2: #5A5855;
+    --text3: #9A9790;
+    --border: rgba(26,25,24,0.10);
+    --border2: rgba(26,25,24,0.06);
+    --bg: #FAFAF8;
+    --white: #FFFFFF;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 48px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+  }
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+  .header-title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .header-title span { color: var(--d1); }
+  .header-sub {
+    font-size: 14px;
+    color: var(--text2);
+    font-weight: 300;
+    max-width: 560px;
+  }
+
+  /* ── DIAMOND NAV ── */
+  .diamond-nav {
+    display: flex;
+    padding: 0 48px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    gap: 2px;
+  }
+  .dnav-item {
+    flex: 1;
+    padding: 14px 16px 12px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+  }
+  .dnav-item:hover { background: var(--bg); }
+  .dnav-item.active-d1 { border-bottom-color: var(--d1); }
+  .dnav-item.active-d2 { border-bottom-color: var(--d2); }
+  .dnav-item.active-d3 { border-bottom-color: var(--d3); }
+  .dnav-item.active-d4 { border-bottom-color: var(--d4); }
+  .dnav-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dnav-label { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .dnav-item.active-d1 .dnav-label,
+  .dnav-item.active-d2 .dnav-label,
+  .dnav-item.active-d3 .dnav-label,
+  .dnav-item.active-d4 .dnav-label { color: var(--text); }
+  .dnav-sub { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { display: flex; min-height: calc(100vh - 180px); }
+
+  /* ── SIDEBAR: TASK LIST ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--white);
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0 20px 10px;
+  }
+  .task-item {
+    padding: 10px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: background 0.1s;
+    border-left: 3px solid transparent;
+  }
+  .task-item:hover { background: var(--bg); }
+  .task-item.active { background: var(--bg); }
+  .task-item.active-d1 { border-left-color: var(--d1); }
+  .task-item.active-d2 { border-left-color: var(--d2); }
+  .task-item.active-d3 { border-left-color: var(--d3); }
+  .task-item.active-d4 { border-left-color: var(--d4); }
+  .task-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .task-name { font-size: 13px; color: var(--text2); font-weight: 400; }
+  .task-item.active .task-name { color: var(--text); font-weight: 500; }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; padding: 32px 40px; overflow-y: auto; max-width: 900px; }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .phase-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .phase-title { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .phase-desc { font-size: 13px; color: var(--text2); margin-bottom: 28px; font-weight: 300; max-width: 600px; line-height: 1.6; }
+
+  .task-section { margin-bottom: 36px; }
+  .task-section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .task-section-title { font-size: 15px; font-weight: 600; }
+  .task-section-why { font-size: 12px; color: var(--text2); margin-left: auto; font-weight: 300; }
+
+  /* ── SKILL CARDS ── */
+  .skill-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .skill-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: var(--white);
+    transition: all 0.15s;
+    cursor: default;
+  }
+  .skill-card:hover { border-color: rgba(26,25,24,0.2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .skill-card.essential { border-left: 3px solid; }
+  .sc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .sc-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .sc-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .sc-desc { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+  .sc-use {
+    font-size: 11px;
+    color: var(--text3);
+    font-style: italic;
+    line-height: 1.4;
+  }
+  .sc-use strong { color: var(--text2); font-style: normal; font-weight: 500; }
+
+  /* ── NO SKILL NOTICE ── */
+  .no-skill {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: var(--bg);
+    grid-column: 1 / -1;
+  }
+  .no-skill-title { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 4px; }
+  .no-skill-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+  /* ── PHASE COLORS ── */
+  .c-d1 { color: var(--d1); }
+  .c-d2 { color: var(--d2); }
+  .c-d3 { color: var(--d3); }
+  .c-d4 { color: var(--d4); }
+
+  .bg-d1 { background: var(--d1-bg); color: var(--d1); }
+  .bg-d2 { background: var(--d2-bg); color: var(--d2); }
+  .bg-d3 { background: var(--d3-bg); color: var(--d3); }
+  .bg-d4 { background: var(--d4-bg); color: var(--d4); }
+
+  .border-d1 { border-left-color: var(--d1); }
+  .border-d2 { border-left-color: var(--d2); }
+  .border-d3 { border-left-color: var(--d3); }
+  .border-d4 { border-left-color: var(--d4); }
+
+  .tag-essential { background: #FFF3CD; color: #856404; }
+  .tag-recommended { background: #E8F5E9; color: #2E7D32; }
+  .tag-optional { background: #F5F5F5; color: #616161; }
+  .tag-gap { background: #FEECEB; color: #C62828; }
+
+  /* ── FOOTER SUMMARY ── */
+  .phase-summary {
+    margin-top: 24px;
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--white);
+    display: flex;
+    gap: 24px;
+  }
+  .summary-item { text-align: center; }
+  .summary-num { font-size: 22px; font-weight: 600; letter-spacing: -0.03em; }
+  .summary-label { font-size: 11px; color: var(--text3); }
+
+  /* ── PANEL VISIBILITY ── */
+  .phase-panel { display: none; }
+  .phase-panel.visible { display: block; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 900px) {
+    .header { padding: 28px 20px 20px; }
+    .diamond-nav { padding: 0 20px; }
+    .sidebar { display: none; }
+    .content { padding: 24px 20px; }
+    .skill-cards { grid-template-columns: 1fr; }
+    .dnav-sub { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">antigravity-awesome-skills × UX methodology</div>
+  <div class="header-title">Double Diamond <span>Skill Registry</span></div>
+  <div class="header-sub">UX 방법론 기준으로 엄선한 스킬셋. 억지 매핑 없이, 각 단계의 핵심 task에 실제로 필요한 스킬만 수록.</div>
+</div>
+
+<div class="diamond-nav">
+  <div class="dnav-item active-d1" id="nav-d1" onclick="switchPhase('d1')">
+    <div class="dnav-dot" style="background:var(--d1)"></div>
+    <div>
+      <div class="dnav-label">Discover</div>
+    </div>
+    <div class="dnav-sub">발견 · 공감</div>
+  </div>
+  <div class="dnav-item" id="nav-d2" onclick="switchPhase('d2')">
+    <div class="dnav-dot" style="background:var(--d2)"></div>
+    <div>
+      <div class="dnav-label">Define</div>
+    </div>
+    <div class="dnav-sub">정의 · 종합</div>
+  </div>
+  <div class="dnav-item" id="nav-d3" onclick="switchPhase('d3')">
+    <div class="dnav-dot" style="background:var(--d3)"></div>
+    <div>
+      <div class="dnav-label">Develop</div>
+    </div>
+    <div class="dnav-sub">발산 · 프로토타입</div>
+  </div>
+  <div class="dnav-item" id="nav-d4" onclick="switchPhase('d4')">
+    <div class="dnav-dot" style="background:var(--d4)"></div>
+    <div>
+      <div class="dnav-label">Deliver</div>
+    </div>
+    <div class="dnav-sub">수렴 · 검증</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+const data = {
+  d1: {
+    phase: 'Discover',
+    color: 'var(--d1)',
+    cls: 'd1',
+    desc: '문제 공간을 넓게 탐색하는 단계. 사용자를 직접 관찰하고, 가정을 깨고, 예상치 못한 니즈를 발굴한다. 이 단계의 목표는 "올바른 문제"를 찾는 것이지 답을 내는 게 아니다.',
+    tasks: [
+      {
+        id: 'd1-t1',
+        name: '리서치 계획 수립',
+        why: '리서치 목표·방법·범위를 먼저 정의해야 방향을 잃지 않는다',
+        skills: [
+          { name: 'product-manager-toolkit', tier: 'essential', desc: '리서치 스코프 정의, 이해관계자 인터뷰 질문 설계, 발견 프레임워크 구조화', use: '킥오프 전 <strong>리서치 플랜 문서</strong> 초안 자동 생성' },
+          { name: 'concise-planning', tier: 'essential', desc: '리서치 단계별 체크리스트 생성. 무엇을, 누구에게, 어떤 방법으로 탐색할지 원자 단위로 분해', use: '<strong>주차별 리서치 실행 계획</strong> 작성' },
+          { name: 'brainstorming', tier: 'recommended', desc: '리서치 질문 발산, 탐색 가설 수립, 조사 범위 초안 생성', use: '리서치 시작 전 <strong>가설 및 탐색 질문셋</strong> 빠르게 도출' },
+        ]
+      },
+      {
+        id: 'd1-t2',
+        name: '사용자 리서치 실행',
+        why: '인터뷰·설문·관찰 등 정성·정량 데이터를 직접 수집하는 핵심 단계',
+        skills: [
+          { name: 'product-manager-toolkit', tier: 'essential', desc: '사용자 인터뷰 가이드, 설문 구조화, Jobs-to-be-Done 분석 프레임 제공', use: '<strong>인터뷰 스크립트 · 설문 문항</strong> 설계' },
+          { name: 'analytics-tracking', tier: 'essential', desc: '정량 리서치의 기반인 GA4 이벤트 설계, 사용자 행동 데이터 수집 체계 구축', use: '<strong>행동 데이터 수집 플랜</strong> 설계. 정성 리서치와 병행' },
+          { name: 'ab-test-setup', tier: 'recommended', desc: '기존 서비스가 있을 때 데이터 기반 가설 수립과 실험 설계', use: '<strong>개선 가설 검증</strong>을 위한 실험 설계. Discover 후반부에 활용' },
+          { name: 'marketing-psychology', tier: 'optional', desc: '인지 편향, 동기 모델, 의사결정 패턴 이해로 인터뷰 해석 깊이 향상', use: '사용자 발언의 <strong>심리적 맥락 해석</strong>에 보조 활용' },
+        ]
+      },
+      {
+        id: 'd1-t3',
+        name: '경쟁사·시장 리서치',
+        why: '사용자 니즈가 현재 시장에서 어떻게 충족(혹은 미충족)되고 있는지 파악',
+        skills: [
+          { name: 'competitor-alternatives', tier: 'essential', desc: '경쟁 제품·서비스의 기능, 포지셔닝, 사용자 경험 구조 비교 분석', use: '<strong>경쟁사 UX 벤치마킹</strong> 및 포지셔닝 맵 생성' },
+          { name: 'seo-fundamentals', tier: 'optional', desc: '사용자가 어떤 키워드로 니즈를 표현하는지 검색 행동 패턴 이해', use: '<strong>사용자의 언어·니즈 표현 방식</strong> 파악. 인터뷰 질문 설계에 보조 활용' },
+        ]
+      },
+      {
+        id: 'd1-t4',
+        name: '데이터 수집 및 기록',
+        why: '현장에서 얻은 정성 데이터를 손실 없이 기록·보관',
+        skills: [
+          { name: 'doc-coauthoring', tier: 'essential', desc: '리서치 노트, 인터뷰 메모, 관찰 기록을 구조화된 문서로 협업 작성', use: '<strong>리서치 원본 기록 문서</strong> 정리' },
+          { name: 'xlsx', tier: 'recommended', desc: '설문 응답 데이터, 인터뷰 참여자 정보, 정량 지표 정리', use: '<strong>리서치 데이터 시트</strong> 구성' },
+        ]
+      },
+    ]
+  },
+  d2: {
+    phase: 'Define',
+    color: 'var(--d2)',
+    cls: 'd2',
+    desc: 'Discover에서 수집한 원자료를 종합해 진짜 문제를 정의하는 단계. 발산된 데이터를 수렴해 "우리가 풀어야 할 문제"를 명확히 한다. 인사이트, 페르소나, HMW, POV 등이 여기서 나온다.',
+    tasks: [
+      {
+        id: 'd2-t1',
+        name: '데이터 종합 · 인사이트 도출',
+        why: '방대한 리서치 데이터를 패턴화하고 핵심 발견을 추출하는 가장 중요한 단계',
+        skills: [
+          { name: 'product-manager-toolkit', tier: 'essential', desc: '인터뷰·설문 데이터를 Jobs-to-be-Done, Pain/Gain 프레임으로 분석·분류', use: '<strong>핵심 인사이트 Top 5-7</strong> 도출 및 근거 정리' },
+          { name: 'sequential-thinking', tier: 'essential', desc: '복잡한 정성 데이터를 단계적으로 분해하고 논리적으로 구조화하는 추론 도구', use: '<strong>친화도 다이어그램</strong> 대체. 패턴·테마 분류에 활용' },
+          { name: 'doc-coauthoring', tier: 'essential', desc: '인사이트 문서를 팀원·클라이언트와 반복 검토하며 공동 작성', use: '<strong>인사이트 리포트 초안</strong> 협업 작성' },
+        ]
+      },
+      {
+        id: 'd2-t2',
+        name: '페르소나 · POV 정의',
+        why: '사용자를 추상화한 페르소나와 "우리는 ~가 ~할 수 있도록 ~해야 한다"는 POV로 팀 방향 정렬',
+        skills: [
+          { name: 'product-manager-toolkit', tier: 'essential', desc: '인터뷰 데이터 기반 페르소나 구조화 (목표, 동기, 좌절, 행동 패턴)', use: '<strong>페르소나 문서</strong> 생성. 2-3개 핵심 페르소나 정의' },
+          { name: 'doc-coauthoring', tier: 'essential', desc: 'POV 스테이트먼트, 페르소나 문서를 팀과 함께 다듬는 협업 작성', use: '<strong>POV · HMW 문서</strong> 작성' },
+          { name: 'frontend-design', tier: 'optional', desc: '페르소나 카드를 시각적으로 디자인해 팀 공유 자료로 활용', use: '<strong>페르소나 비주얼 카드</strong> 생성' },
+        ]
+      },
+      {
+        id: 'd2-t3',
+        name: 'HMW · 문제 정의',
+        why: '"어떻게 하면 ~할 수 있을까(HMW)"로 문제를 기회로 재프레이밍. Define과 Develop의 연결고리',
+        skills: [
+          { name: 'brainstorming', tier: 'essential', desc: '인사이트를 HMW 질문으로 변환하고 문제 프레이밍 발산', use: '<strong>HMW 질문 10-15개</strong> 생성 및 우선순위 정리' },
+          { name: 'product-manager-toolkit', tier: 'recommended', desc: 'RICE 기준으로 HMW 질문 중 집중할 문제 영역 우선순위화', use: '<strong>핵심 문제 영역 선정</strong>에 정량 근거 부여' },
+        ]
+      },
+      {
+        id: 'd2-t4',
+        name: '리서치 결과 문서화',
+        why: 'Define 단계 산출물을 클라이언트·팀에 전달 가능한 형태로 패키징',
+        skills: [
+          { name: 'docx', tier: 'essential', desc: 'Discover 리포트, 페르소나 문서, 인사이트 요약 등 전문 Word 문서 생성 (Anthropic 공식)', use: '<strong>클라이언트 납품용 리서치 리포트</strong> DOCX 생성' },
+          { name: 'pdf', tier: 'recommended', desc: '완성된 문서를 배포용 PDF로 변환·패키징 (Anthropic 공식)', use: '<strong>공유·배포용 PDF</strong> 리포트 생성' },
+          { name: 'xlsx', tier: 'recommended', desc: '경쟁사 비교표, 페르소나 매트릭스, 우선순위 스코어 데이터 정리', use: '<strong>데이터 기반 분석 자료</strong> 스프레드시트' },
+          { name: 'internal-comms', tier: 'optional', desc: '이해관계자 대상 Define 단계 중간 보고, 리더십 업데이트 문서', use: '<strong>내부 진행 상황 보고</strong> 문서' },
+        ]
+      },
+    ]
+  },
+  d3: {
+    phase: 'Develop',
+    color: 'var(--d3)',
+    cls: 'd3',
+    desc: '정의된 문제에 대한 해결책을 폭넓게 발산하는 단계. 아이디어를 판단 없이 생성하고, 빠르게 시각화하며, 낮은 충실도의 프로토타입으로 아이디어를 형태로 만든다.',
+    tasks: [
+      {
+        id: 'd3-t1',
+        name: '아이디어 발산 · 콘셉트 탐색',
+        why: '판단 없이 최대한 많은 해결책 아이디어를 생성. 좋은 아이디어는 많은 아이디어에서 나온다',
+        skills: [
+          { name: 'brainstorming', tier: 'essential', desc: '아이디어 발산, 콘셉트 탐색, 솔루션 후보 구조화. 이 단계에서 가장 중요한 스킬', use: '<strong>솔루션 아이디어 20-30개</strong> 빠르게 발산' },
+          { name: 'product-manager-toolkit', tier: 'recommended', desc: '발산된 아이디어를 Impact/Effort 매트릭스로 1차 필터링', use: '<strong>아이디어 스크리닝</strong> 및 실현 가능성 평가' },
+          { name: 'marketing-psychology', tier: 'optional', desc: '사용자 동기·행동 패턴에 기반한 아이디어 검증 관점 제공', use: '아이디어의 <strong>심리적 타당성</strong> 검토' },
+        ]
+      },
+      {
+        id: 'd3-t2',
+        name: '정보 구조 · 플로우 설계',
+        why: 'IA, 사이트맵, 태스크 플로우, 유저 플로우 등 서비스 구조 정의',
+        skills: [
+          { name: 'product-manager-toolkit', tier: 'essential', desc: '사용자 스토리 기반 플로우 정의, 기능 명세 구조화, MVP 범위 설정', use: '<strong>사용자 플로우 · 기능 명세</strong> 문서 작성' },
+          { name: 'mobile-design', tier: 'essential', desc: '모바일 퍼스트 IA 원칙, 터치 인터랙션 패턴, iOS/Android 컨벤션 기반 구조 설계', use: '<strong>모바일 앱 IA · 네비게이션 구조</strong> 정의' },
+          { name: 'api-patterns', tier: 'optional', desc: '서비스 기능 구조와 데이터 흐름의 기술적 타당성 검토', use: 'UX 플로우와 <strong>기술 구현 가능성</strong> 정합성 확인' },
+        ]
+      },
+      {
+        id: 'd3-t3',
+        name: '와이어프레임 · 프로토타입',
+        why: '아이디어를 눈에 보이는 형태로 빠르게 만들어 팀과 사용자가 반응할 수 있게 한다',
+        skills: [
+          { name: 'ui-ux-pro-max', tier: 'essential', desc: '50가지 스타일, 다양한 팔레트·폰트 조합. 와이어프레임부터 하이파이 목업까지 UI 생성', use: '<strong>와이어프레임 · 목업 · 인터랙티브 프로토타입</strong> 빠르게 생성' },
+          { name: 'frontend-design', tier: 'essential', desc: '프로덕션급 UI 컴포넌트 생성. 실제 코드로 작동하는 프로토타입 구현', use: '<strong>클릭어블 HTML 프로토타입</strong> 생성. 사용성 테스트에 바로 활용' },
+          { name: 'react-patterns', tier: 'recommended', desc: '인터랙션이 복잡한 컴포넌트의 상태 관리와 동작 구현', use: '<strong>인터랙티브 UI 컴포넌트</strong> 프로토타이핑' },
+          { name: 'web-artifacts-builder', tier: 'recommended', desc: 'React + Tailwind + shadcn/ui 조합으로 다중 컴포넌트 프로토타입 구성', use: '<strong>복합 화면 프로토타입</strong> (대시보드, 멀티스텝 플로우 등)' },
+          { name: 'd3-viz', tier: 'optional', desc: '데이터 시각화가 포함된 대시보드·차트 컴포넌트 프로토타이핑', use: '<strong>데이터 기반 UI</strong> 프로토타입' },
+        ]
+      },
+      {
+        id: 'd3-t4',
+        name: '디자인 시스템 · 비주얼 탐색',
+        why: '반복 사용할 컴포넌트·스타일 원칙을 정의해 일관성 확보',
+        skills: [
+          { name: 'theme-factory', tier: 'recommended', desc: '10가지 프리셋 테마로 비주얼 방향성 빠르게 탐색. 슬라이드·문서·HTML 모두 적용 가능', use: '<strong>비주얼 컨셉 방향성</strong> 빠른 탐색 및 클라이언트 제시' },
+          { name: 'tailwind-patterns', tier: 'optional', desc: 'Tailwind v4 디자인 토큰·유틸리티 클래스 기반 컴포넌트 스타일 정의', use: '<strong>컴포넌트 스타일 가이드</strong> 초안 작성' },
+          { name: 'canvas-design', tier: 'optional', desc: '포스터·비주얼 아트·스타일 탐색용 정적 그래픽 생성', use: '<strong>비주얼 무드보드 · 스타일 탐색</strong>용 이미지 생성' },
+        ]
+      },
+      {
+        id: 'd3-t5',
+        name: '아이디어 테스트 · 검증',
+        why: '프로토타입을 실제 사용자나 팀에게 노출해 빠르게 피드백 수집',
+        skills: [
+          { name: 'playwright-skill', tier: 'essential', desc: '브라우저 자동화로 프로토타입의 플로우·인터랙션·엣지케이스 자동 검증', use: '<strong>프로토타입 기능 검증</strong> 및 사용성 시나리오 테스트' },
+          { name: 'webapp-testing', tier: 'recommended', desc: 'Playwright 기반 로컬 웹 프로토타입 테스트. 스크린샷 캡처, 플로우 검증', use: '<strong>사용성 테스트 준비</strong>용 프로토타입 사전 검증' },
+          { name: 'ab-test-setup', tier: 'recommended', desc: '복수의 디자인 콘셉트를 정량적으로 비교할 실험 설계', use: '<strong>A/B 콘셉트 비교</strong> 실험 설계' },
+        ]
+      },
+    ]
+  },
+  d4: {
+    phase: 'Deliver',
+    color: 'var(--d4)',
+    cls: 'd4',
+    desc: '최선의 솔루션을 수렴·정제해 실제로 구현하고 출시하는 단계. 개발 핸드오프, 사용성 검증, 출시 후 모니터링, 그리고 클라이언트에게 납품 가능한 모든 산출물이 여기서 나온다.',
+    tasks: [
+      {
+        id: 'd4-t1',
+        name: '사용성 테스트 · 검증',
+        why: '실제 사용자 또는 내부 팀과 프로토타입을 테스트해 최종 결함 발견',
+        skills: [
+          { name: 'playwright-skill', tier: 'essential', desc: '최종 프로토타입·개발 빌드의 전체 사용자 플로우 자동화 테스트', use: '<strong>사용성 시나리오 자동 검증</strong>. 반복 테스트 효율화' },
+          { name: 'webapp-testing', tier: 'essential', desc: '로컬 웹앱 기능 검증, 엣지케이스 테스트, 반응형 디자인 확인', use: '<strong>최종 납품 전 QA</strong> 검증' },
+          { name: 'web-design-guidelines', tier: 'recommended', desc: 'UI 코드 접근성·UX 모범사례·가이드라인 준수 여부 감사', use: '<strong>접근성 · UX 가이드라인</strong> 컴플라이언스 체크' },
+          { name: 'web-performance-optimization', tier: 'optional', desc: 'Core Web Vitals, 로딩 속도, 번들 최적화로 실제 사용자 경험 품질 보장', use: '<strong>성능 기준 충족</strong> 여부 검증' },
+        ]
+      },
+      {
+        id: 'd4-t2',
+        name: '개발 핸드오프 문서',
+        why: '디자이너와 개발자 사이의 정보 손실 없이 의도를 정확하게 전달',
+        skills: [
+          { name: 'product-manager-toolkit', tier: 'essential', desc: 'PRD, 사용자 스토리, 인수 기준, 기능 명세 문서 생성', use: '<strong>개발팀 핸드오프용 PRD</strong> 작성' },
+          { name: 'doc-coauthoring', tier: 'essential', desc: '스펙 문서, 기술 명세, 컴포넌트 가이드를 팀과 함께 작성·검토', use: '<strong>핸드오프 스펙 문서</strong> 협업 작성' },
+          { name: 'docx', tier: 'essential', desc: '최종 핸드오프 문서를 전문 Word 파일로 생성 (Anthropic 공식)', use: '<strong>개발 명세 DOCX</strong> 납품' },
+          { name: 'api-documentation-generator', tier: 'optional', desc: 'API 연동이 필요한 기능의 엔드포인트 명세 자동 생성', use: '<strong>API 명세 문서</strong> 작성' },
+        ]
+      },
+      {
+        id: 'd4-t3',
+        name: '클라이언트 산출물 제작',
+        why: 'UX 프로젝트의 모든 결과를 클라이언트가 활용할 수 있는 형태로 패키징',
+        skills: [
+          { name: 'pptx', tier: 'essential', desc: '리서치 결과, 디자인 콘셉트, 전략 권고안 발표용 프레젠테이션 생성 (Anthropic 공식)', use: '<strong>클라이언트 발표자료 PPTX</strong> 생성' },
+          { name: 'docx', tier: 'essential', desc: 'UX 리서치 최종 리포트, 설계 가이드라인 문서 (Anthropic 공식)', use: '<strong>최종 납품 리포트 DOCX</strong> 생성' },
+          { name: 'pdf', tier: 'essential', desc: '배포·공유용 PDF 변환. 발표자료·리포트 최종본 패키징 (Anthropic 공식)', use: '<strong>배포용 PDF</strong> 산출물 생성' },
+          { name: 'xlsx', tier: 'recommended', desc: '경쟁사 분석, 기능 우선순위, 사용자 데이터 등 데이터 자료 정리 (Anthropic 공식)', use: '<strong>데이터 첨부 자료 XLSX</strong> 납품' },
+          { name: 'theme-factory', tier: 'recommended', desc: '산출물 전체에 일관된 브랜드·테마 스타일 적용', use: '<strong>산출물 비주얼 통일성</strong> 확보' },
+        ]
+      },
+      {
+        id: 'd4-t4',
+        name: '출시 후 모니터링 · 반복',
+        why: '서비스 출시 후 실제 사용 데이터로 가설을 검증하고 다음 반복 사이클 준비',
+        skills: [
+          { name: 'analytics-tracking', tier: 'essential', desc: '출시 후 실사용 데이터 수집 체계 구축, KPI 추적, 이상 지표 모니터링', use: '<strong>출시 후 지표 모니터링</strong> 체계 설계' },
+          { name: 'ab-test-setup', tier: 'essential', desc: '출시된 기능의 효과 검증, 개선 가설 실험 설계', use: '<strong>출시 후 A/B 실험</strong> 설계 및 운영' },
+          { name: 'page-cro', tier: 'recommended', desc: '랜딩·핵심 전환 페이지 지표 분석으로 개선 포인트 발견', use: '<strong>전환율 개선</strong> 기회 발굴. 다음 Discover 사이클 입력값' },
+          { name: 'onboarding-cro', tier: 'recommended', desc: '온보딩 활성화율, Time-to-Value 지표 분석으로 초기 경험 개선', use: '<strong>신규 사용자 경험</strong> 지속 개선' },
+        ]
+      },
+    ]
+  }
+};
+
+const tierLabel = { essential: '필수', recommended: '권장', optional: '선택', gap: '스킬 없음' };
+const tierCls = { essential: 'tag-essential', recommended: 'tag-recommended', optional: 'tag-optional', gap: 'tag-gap' };
+
+let currentPhase = 'd1';
+let currentTask = null;
+
+function renderSidebar(phase) {
+  const d = data[phase];
+  const sidebar = document.getElementById('sidebar');
+  const activeCls = `active-${phase}`;
+  sidebar.innerHTML = `<div class="sidebar-label">UX Tasks</div>` +
+    d.tasks.map((t, i) => `
+      <div class="task-item ${currentTask === t.id ? 'active ' + activeCls : ''}"
+           id="si-${t.id}" onclick="scrollToTask('${t.id}')">
+        <span class="task-num">T${String(i+1).padStart(2,'0')}</span>
+        <span class="task-name">${t.name}</span>
+      </div>
+    `).join('');
+}
+
+function countSkills(phase) {
+  const d = data[phase];
+  let essential = 0, recommended = 0, optional = 0;
+  d.tasks.forEach(t => t.skills.forEach(s => {
+    if (s.tier === 'essential') essential++;
+    else if (s.tier === 'recommended') recommended++;
+    else if (s.tier === 'optional') optional++;
+  }));
+  return { essential, recommended, optional };
+}
+
+function renderContent(phase) {
+  const d = data[phase];
+  const counts = countSkills(phase);
+  const content = document.getElementById('content');
+
+  content.innerHTML = `
+    <div class="phase-header">
+      <span class="phase-badge bg-${phase}">${d.phase}</span>
+      <span class="phase-title c-${phase}">${d.phase}</span>
+    </div>
+    <div class="phase-desc">${d.desc}</div>
+
+    ${d.tasks.map((t, i) => `
+      <div class="task-section" id="${t.id}">
+        <div class="task-section-header">
+          <span class="task-section-num c-${phase}">T${String(i+1).padStart(2,'0')}</span>
+          <span class="task-section-title">${t.name}</span>
+          <span class="task-section-why">${t.why}</span>
+        </div>
+        <div class="skill-cards">
+          ${t.skills.map(s => `
+            <div class="skill-card ${s.tier === 'essential' ? 'essential border-' + phase : ''}">
+              <div class="sc-top">
+                <span class="sc-name">${s.name}</span>
+                <span class="sc-tag ${tierCls[s.tier]}">${tierLabel[s.tier]}</span>
+              </div>
+              <div class="sc-desc">${s.desc}</div>
+              <div class="sc-use">활용: ${s.use}</div>
+            </div>
+          `).join('')}
+          ${t.hasGap ? `
+            <div class="no-skill">
+              <div class="no-skill-title">⚠ 이 task를 전담하는 스킬 없음</div>
+              <div class="no-skill-desc">${t.gapDesc}</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `).join('')}
+
+    <div class="phase-summary">
+      <div class="summary-item">
+        <div class="summary-num c-${phase}">${counts.essential}</div>
+        <div class="summary-label">필수 스킬</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-num" style="color:var(--d2)">${counts.recommended}</div>
+        <div class="summary-label">권장 스킬</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-num" style="color:var(--text3)">${counts.optional}</div>
+        <div class="summary-label">선택 스킬</div>
+      </div>
+      <div class="summary-item" style="margin-left:auto">
+        <div class="summary-num" style="color:var(--text2)">${counts.essential + counts.recommended + counts.optional}</div>
+        <div class="summary-label">총 스킬</div>
+      </div>
+    </div>
+  `;
+}
+
+function switchPhase(phase) {
+  currentPhase = phase;
+  currentTask = data[phase].tasks[0].id;
+
+  // nav active state
+  ['d1','d2','d3','d4'].forEach(p => {
+    const nav = document.getElementById('nav-' + p);
+    nav.className = 'dnav-item';
+    if (p === phase) nav.classList.add('active-' + p);
+  });
+
+  renderSidebar(phase);
+  renderContent(phase);
+}
+
+function scrollToTask(taskId) {
+  currentTask = taskId;
+  const el = document.getElementById(taskId);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // update sidebar active
+  document.querySelectorAll('.task-item').forEach(item => {
+    item.classList.remove('active', 'active-d1', 'active-d2', 'active-d3', 'active-d4');
+  });
+  const si = document.getElementById('si-' + taskId);
+  if (si) {
+    si.classList.add('active', 'active-' + currentPhase);
+  }
+}
+
+// init
+switchPhase('d1');
+</script>
+</body>
+</html>
